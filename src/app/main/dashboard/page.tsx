@@ -2,14 +2,22 @@
 
 import { cotacao, getCripto, getDolar } from "@/app/api";
 import { PizzaGraph } from "@/components/features/dashboard/PizzaGraph";
-import { Header } from "@/components/shared/header";
-import { Navbar } from "@/components/shared/navbar/page";
+import { Card } from "@/components/shared/card";
 import { auth, db } from "@/lib/firebase/firebaseconfig";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
-import { TrendingDown, TrendingUp } from "lucide-react";
+import {
+  CheckCircle2,
+  CircleAlertIcon,
+  Clock,
+  Plus,
+  Target,
+  TrendingUp,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
+import { TaskInfo } from "./components/TaskInfo";
+import TaskModal from "./components/TaskModal";
 
 interface Transaction {
   id: string;
@@ -28,6 +36,8 @@ interface Bill {
 
 export default function DashboardPage() {
   const router = useRouter();
+  const [selectTask, setSelectedTask] = useState(null);
+  const [showModal, setShowModal] = useState(false);
   const [balance, setBalance] = useState(0);
   const [income, setIncome] = useState(0);
   const [expense, setExpense] = useState(0);
@@ -44,7 +54,6 @@ export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(auth.currentUser);
 
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const unLogged = onAuthStateChanged(auth, (userLogged) => {
       if (!userLogged) {
         router.push("/login");
@@ -117,8 +126,7 @@ export default function DashboardPage() {
     });
 
     return () => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      unsubscribe(), bills();
+      (unsubscribe(), bills());
     };
   }, [user]);
 
@@ -173,150 +181,109 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-emerald-300 text-emerald-800 font-serif p-9">
-      <div className="max-w-6xl mx-auto">
-        <Header />
-        <Navbar />
-        {/* Balanço Geral */}
-        <section className="grid gap-6 md:grid-cols-3 mb-10">
-          <Card
-            title="Receitas"
-            value={`R$ ${income.toFixed(2)}`}
-            color="text-green-700"
-          />
-          <Card
-            title="Despesas"
-            value={`R$ ${expense.toFixed(2)}`}
-            color="text-red-600"
-          />
-          <Card
-            title="Saldo Atual"
-            value={`R$ ${balance.toFixed(2)}`}
-            color={balance >= 0 ? "text-green-700" : "text-red-700"}
-          />
-        </section>
-
-        {/* Gráficos */}
-        <section className="bg-white/70 shadow rounded-2xl p-6 mb-10">
-          <h2 className="text-xl font-semibold mb-4">
-            Distribuição de Despesas
-          </h2>
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* Placeholder gráfico de pizza */}
-            <div className="h-full flex items-center justify-center bg-white/50 text-emerald-800 border rounded">
-              <PizzaGraph data={despesasCategoria} />
-            </div>
-            {/* Tabela resumo */}
-            <table className="w-full text-lg">
-              <thead>
-                <tr className="border-b text-left">
-                  <th className="py-2">Categoria</th>
-                  <th className="py-2">Valor</th>
-                </tr>
-              </thead>
-              <tbody>
-                {despesasCategoria
-                  .filter((d) => d.valor !== 0)
-                  .map((d) => (
-                    <tr key={d.categoria} className="border-b last:border-none">
-                      <td className="py-2">{d.categoria}</td>
-                      <td className="py-2">R$ {d.valor.toFixed(2)}</td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        {/* Alertas de Vencimentos */}
-        <section className="bg-white/70 shadow rounded-2xl p-6 mb-10">
-          <h2 className="text-xl font-semibold mb-4">Contas a Vencer</h2>
-          {bills.length === 0 ? (
-            <p className="text-emerald-800">
-              Nenhuma conta próxima do vencimento.
-            </p>
-          ) : (
-            <ul className="space-y-3">
-              {bills.map((a) => (
-                <li
-                  key={a.id}
-                  className={`flex justify-between text-lg border-b pb-2 last:border-none ${
-                    isDueSoon(a.dueDate) ? "text-red-600" : ""
-                  }`}
-                >
-                  <span>
-                    {a.description} –{" "}
-                    {new Date(a.dueDate).toLocaleDateString("pt-BR")}
-                  </span>
-                  <span className="font-semibold">R$ {a.value.toFixed(2)}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        {/* Cotações */}
-        <section className="bg-white/70 shadow rounded-2xl p-6">
-          <h2 className="text-xl font-semibold mb-4">Cotações</h2>
-          <div className="flex gap-10">
+    <>
+      <div className="min-h-screen bg-[#FAFAF9] p-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
             <div>
-              <p className="text-sm text-emerald-800">Dólar (USD)</p>
-              <p className="text-lg font-bold">{dolar.replaceAll(".", ",")}</p>
-            </div>
-            <div>
-              <p className="text-sm text-emerald-800">Bitcoin</p>
-              <p
-                className={`text-lg font-bold ${
-                  parseInt(cripto?.BTCUSD.pctChange || "0") > 0
-                    ? ""
-                    : "text-red-600"
-                }`}
-              >
-                $ {btc?.toLocaleString("pt-br")}{" "}
-                {parseFloat(cripto?.BTCUSD.pctChange || "0") > 0 ? (
-                  <TrendingUp className="inline-block w-4 h-4 ml-1 fill-green-600" />
-                ) : (
-                  <TrendingDown className="inline-block w-4 h-4 ml-1 fill-red-600" />
-                )}
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                Dashboard
+              </h1>
+              <p className="text-gray-600">
+                Welcome back! Here&apos;s your productivity overview
               </p>
             </div>
-            <div>
-              <p className="text-sm text-emerald-800">Ethereum</p>
-              <p
-                className={`text-lg font-bold ${
-                  parseInt(cripto?.ETHUSD.pctChange || "0") > 0
-                    ? ""
-                    : "text-red-600"
-                }`}
-              >
-                $ {eth?.toLocaleString("pt-br")}
-                {parseFloat(cripto?.ETHUSD.pctChange || "0") > 0 ? (
-                  <TrendingUp className="inline-block w-4 h-4 ml-1 fill-green-600" />
-                ) : (
-                  <TrendingDown className="inline-block w-4 h-4 ml-1 fill-red-600" />
-                )}
-              </p>
+
+            <div
+              onClick={() => {
+                setSelectedTask(null);
+                setShowModal(true);
+              }}
+              className="bg-indigo-600 hover:bg-indigo-700 cursor-pointer flex items-center gap-1 py-2 px-4 rounded-lg shadow-lg shadow-indigo-500/30"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Create Task
             </div>
           </div>
-        </section>
+          {/* Balanço Geral */}
+          <section className="grid gap-6 md:grid-cols-4 mb-8">
+            <Card
+              title="Total Tasks"
+              variant="compact"
+              value={100}
+              subtitle="All time"
+              icon={Target}
+              gradient="from-indigo-400 to-indigo-600"
+            />
+            <Card
+              title="In Progress"
+              variant="compact"
+              value={20}
+              subtitle="Active now"
+              icon={Clock}
+              gradient="from-blue-400 to-blue-600"
+            />
+            <Card
+              title="Completed"
+              variant="compact"
+              value={60}
+              subtitle={`completion rate`}
+              icon={CheckCircle2}
+              gradient="from-green-400 to-green-600"
+            />
+            <Card
+              title="Avg. Completion"
+              variant="compact"
+              value={20}
+              subtitle="Days per task"
+              icon={TrendingUp}
+              gradient="from-purple-400 to-purple-600"
+            />
+          </section>
+          {/* Gráficos */}|
+          <section className="flex gap-6 mb-8">
+            <Card variant="default" classname="mb-10 w-full">
+              <div>
+                <h2 className="text-xl font-semibold mb-4">
+                  Tarefas por Status
+                </h2>
+                <div>
+                  <PizzaGraph data={despesasCategoria} />
+                </div>
+              </div>
+            </Card>
+            <Card variant="default" classname="mb-10 w-full">
+              <div>
+                <h2 className="text-xl font-semibold mb-4">
+                  Tarefas por Categoria
+                </h2>
+                <div>
+                  <PizzaGraph data={despesasCategoria} />
+                </div>
+              </div>
+            </Card>
+          </section>
+          {/*resumo task*/}
+          <section className="flex gap-6">
+            <Card variant="default" classname="mb-10 w-full">
+              <span className="flex gap-2 text-xl font-bold items-center mb-6">
+                <Clock className="text-indigo-600" />
+                Tarefas Recentes
+              </span>
+              <TaskInfo />
+            </Card>
+            <Card variant="default" classname="mb-10 w-full">
+              <span className="flex gap-2 text-xl font-bold items-center mb-6">
+                <CircleAlertIcon className="text-orange-600" />
+                Tarefas Urgentes
+              </span>
+              <TaskInfo />
+            </Card>
+          </section>
+        </div>
       </div>
-    </div>
-  );
-}
-
-function Card({
-  title,
-  value,
-  color,
-}: {
-  title: string;
-  value: string;
-  color: string;
-}) {
-  return (
-    <div className="bg-white/70 shadow rounded-2xl p-6 flex flex-col items-center justify-center">
-      <h3 className="text-lg text-emerald-800 mb-2">{title}</h3>
-      <p className={`text-2xl font-bold ${color}`}>{value}</p>
-    </div>
+      <TaskModal isOpen={showModal} onClose={(value) => setShowModal(value)}/>
+    </>
   );
 }

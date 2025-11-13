@@ -132,15 +132,15 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center font-serif justify-center bg-emerald-300 p-6">
-      <div className="w-full max-w-md bg-white/70 shadow-xl rounded-2xl text-emerald-800 p-8">
+    <div className="bg-[#FAFAF9] flex w-screen h-screen">
+      <div className="w-1/3 m-auto bg-white/70 shadow-xl rounded-2xl text-slate-800 p-8">
         <h2 className="text-3xl font-semibold text-center mb-6">Login</h2>
 
         {error && (
           <p className="text-sm text-red-600 text-center mb-2">{error}</p>
         )}
         {success && (
-          <p className="text-sm text-green-600 text-center mb-2">{success}</p>
+          <p className="text-sm text-green-800 text-center mb-2">{success}</p>
         )}
 
         <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
@@ -152,7 +152,7 @@ export default function LoginPage() {
             >
               E-mail
             </label>
-            <div className="relative mt-1">
+            <div className="relative mt-1 border border-slate-300 rounded-lg shadow-sm">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                 <Mail className="h-5 w-5 text-gray-400" />
               </div>
@@ -165,7 +165,7 @@ export default function LoginPage() {
                     id="email"
                     type="email"
                     placeholder="seu.email@exemplo.com"
-                    className="block w-full rounded-md border-gray-300 pl-10 p-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    className="block w-full rounded-lg pl-10 p-2 sm:text-sm"
                   />
                 )}
               />
@@ -185,7 +185,7 @@ export default function LoginPage() {
             >
               Senha
             </label>
-            <div className="relative mt-1">
+            <div className="relative mt-1 border border-slate-300 rounded-lg shadow-sm">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                 <Lock className="h-5 w-5 text-gray-400" />
               </div>
@@ -198,7 +198,7 @@ export default function LoginPage() {
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="Sua senha"
-                    className="block w-full rounded-md border-gray-300 pl-10 p-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    className="block w-full rounded-lg pl-10 p-2 sm:text-sm"
                   />
                 )}
               />
@@ -226,7 +226,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={handleForgotPassword}
-                className="font-medium text-emerald-600 hover:text-emerald-500"
+                className="font-medium text-indigo-600 hover:text-indigo-700"
               >
                 Esqueceu sua senha?
               </button>
@@ -237,7 +237,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex w-full justify-center rounded-md border border-transparent bg-emerald-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
+              className="flex w-full justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
             >
               {isSubmitting ? (
                 <>
@@ -256,7 +256,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => router.push("/signup")}
-                className="font-medium text-emerald-600 hover:underline"
+                className="font-medium text-indigo-600 hover:underline"
               >
                 Cadastre-se
               </button>
@@ -265,7 +265,7 @@ export default function LoginPage() {
         </form>
 
         <div className="mt-6 text-center">
-          <div className="text-sm text-emerald-800 mb-2">Ou entre com</div>
+          <div className="text-sm text-indigo-600 mb-2">Ou entre com</div>
           <div className="flex gap-2 justify-center">
             <button
               type="button"

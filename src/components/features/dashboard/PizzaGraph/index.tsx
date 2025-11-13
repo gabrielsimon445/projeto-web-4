@@ -17,8 +17,8 @@ export const PizzaGraph = ({ data }: PizzaGraphT) => {
     }));
 
   return (
-    <>
-      <PieChart series={[{ data: filteredData }]} width={200} height={250} />
-    </>
+    <div className="p-3">
+      <PieChart series={[{ data: filteredData }]}/>
+    </div>
   );
 };
