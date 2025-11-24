@@ -271,19 +271,35 @@ export default function DashboardPage() {
                 <Clock className="text-indigo-600" />
                 Tarefas Recentes
               </span>
-              <TaskInfo />
+              <TaskInfo
+                titulo={"Teste"}
+                descricao={"Esse é um teste"}
+                prioridade={"Baixa"}
+                categoria={"Pessoal"}
+                data={"24 Nov"}
+                responsavel={"Douglas"}
+                estado={"Pendente"}
+              />
             </Card>
             <Card variant="default" classname="mb-10 w-full">
               <span className="flex gap-2 text-xl font-bold items-center mb-6">
                 <CircleAlertIcon className="text-orange-600" />
                 Tarefas Urgentes
               </span>
-              <TaskInfo />
+              <TaskInfo
+                titulo={"Urgente"}
+                descricao={"Teste de tarefa urgente"}
+                prioridade={"Alta"}
+                categoria={"Urgente"}
+                data={"24 Nov"}
+                responsavel={"Equipe"}
+                estado={"Pendente"}
+              />
             </Card>
           </section>
         </div>
       </div>
-      <TaskModal isOpen={showModal} onClose={(value) => setShowModal(value)}/>
+      <TaskModal isOpen={showModal} onClose={(value) => setShowModal(value)} />
     </>
   );
 }
