@@ -1,34 +1,40 @@
-"use client"
+"use client";
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
-export type AccessibilityTheme = 'light' | 'dark' | 'high-contrast';
+export type AccessibilityTheme = "light" | "dark" | "contrast";
 
-interface AccessibilityContextProps {
+interface Ctx {
   theme: AccessibilityTheme;
-  setTheme: (theme: AccessibilityTheme) => void;
+  setTheme: (t: AccessibilityTheme) => void;
   fontSize: number;
-  setFontSize: (size: number) => void;
-  spacing: number;
-  setSpacing: (spacing: number) => void;
+  setFontSize: (n: number) => void;
 }
 
-const AccessibilityContext = createContext<AccessibilityContextProps | undefined>(undefined);
+const AccessibilityContext = createContext<Ctx | null>(null);
 
-export const AccessibilityProvider = ({ children }: { children: ReactNode }) => {
-  const [theme, setTheme] = useState<AccessibilityTheme>('light');
-  const [fontSize, setFontSize] = useState<number>(16);
-  const [spacing, setSpacing] = useState<number>(8);
+export function AccessibilityProvider({ children }: { children: ReactNode }) {
+  const [theme, setTheme] = useState<AccessibilityTheme>("light");
+  const [fontSize, setFontSize] = useState(16);
+
+  useEffect(() => {
+    document.body.classList.remove("theme-light", "theme-dark", "theme-contrast");
+    document.body.classList.add(`theme-${theme}`);
+  }, [theme]);
+
+  useEffect(() => {
+    document.documentElement.style.setProperty("--access-font-size", fontSize + "px");
+  }, [fontSize]);
 
   return (
-    <AccessibilityContext.Provider value={{ theme, setTheme, fontSize, setFontSize, spacing, setSpacing }}>
+    <AccessibilityContext.Provider value={{ theme, setTheme, fontSize, setFontSize }}>
       {children}
     </AccessibilityContext.Provider>
   );
-};
+}
 
-export const useAccessibility = () => {
-  const context = useContext(AccessibilityContext);
-  if (!context) throw new Error('useAccessibility must be used within AccessibilityProvider');
-  return context;
-};
+export function useAccessibility() {
+  const ctx = useContext(AccessibilityContext);
+  if (!ctx) throw new Error("useAccessibility must be inside provider");
+  return ctx;
+}

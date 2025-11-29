@@ -4,7 +4,6 @@ import "./globals.css";
 import VLibrasClient from "@/components/shared/libras/Vlibras";
 import { AccessibilityProvider } from "@/components/shared/accessibility/AccessibilityContext";
 import AccessibilitySidebar from "@/components/shared/accessibility/AccessibilitySidebar";
-import AccessibilityGlobalStyles from "@/components/shared/accessibility/AccessibilityGlobalStyles";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,7 +36,6 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} ${bitterSerif.variable} antialiased`}
       >
         <AccessibilityProvider>
-          <AccessibilityGlobalStyles />
           <AccessibilitySidebar />
           <VLibrasClient />
           {children}
