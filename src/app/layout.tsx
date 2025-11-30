@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Bitter } from "next/font/google";
 import "./globals.css";
+import VLibrasClient from "@/components/shared/libras/Vlibras";
+import { AccessibilityProvider } from "@/components/shared/accessibility/AccessibilityContext";
+import AccessibilitySidebar from "@/components/shared/accessibility/AccessibilitySidebar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,7 +35,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${bitterSerif.variable} antialiased`}
       >
-        {children}
+        <AccessibilityProvider>
+          <AccessibilitySidebar />
+          <VLibrasClient />
+          {children}
+        </AccessibilityProvider>
       </body>
     </html>
   );
