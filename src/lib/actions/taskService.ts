@@ -29,9 +29,10 @@ export interface TaskData {
   title: string;
   description: string;
   due_date: string;
-  priority: "baixa" | "media" | "alta";
+  priority: "Baixa" | "Media" | "Alta";
   status: string;
   category?: string;
+  assignee?: string;
   subtasks: SubTask[];
   progress: number;
 }
@@ -91,16 +92,16 @@ export function useAllTasks(userId: string | null) {
 //  FILTROS
 // =====================================
 export const usePendingTasks = (u: string | null) =>
-  useAllTasks(u)?.filter((t) => t.status === "pendente") || [];
+  useAllTasks(u)?.filter((t) => t.status === "Pendente") || [];
 
 export const useProgressTasks = (u: string | null) =>
-  useAllTasks(u)?.filter((t) => t.status === "em andamento") || [];
+  useAllTasks(u)?.filter((t) => t.status === "Em Andamento") || [];
 
 export const useDoneTasks = (u: string | null) =>
-  useAllTasks(u)?.filter((t) => t.status === "finalizado") || [];
+  useAllTasks(u)?.filter((t) => t.status === "Finalizado") || [];
 
 export const useUrgentsTasks = (u: string | null) =>
-  useAllTasks(u)?.filter((t) => t.category === "urgente") || [];
+  useAllTasks(u)?.filter((t) => t.category === "Urgente") || [];
 
 // =====================================
 //  ATUALIZAR TAREFA
@@ -154,7 +155,7 @@ export const deleteTask = async (userId: string, taskId: string) => {
 export const updateTaskStatus = async (
   userId: string,
   taskId: string,
-  status: "pendente" | "em andamento" | "finalizado"
+  status: "Pendente" | "Em Andamento" | "Finalizado"
 ) => {
   const taskRef = doc(db, "tasks", userId, "items", taskId);
 

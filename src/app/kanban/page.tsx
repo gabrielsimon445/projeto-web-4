@@ -24,12 +24,12 @@ import { Plus } from "lucide-react";
 import type { TaskData } from "@/lib/actions/taskService";
 import { DroppableColumn } from "./DroppableColumn";
 
-type ColumnKey = "pendente" | "em andamento" | "finalizado";
+type ColumnKey = "Pendente" | "Em Andamento" | "Finalizado";
 
 const emptyColumns: Record<ColumnKey, TaskData[]> = {
-  pendente: [],
-  "em andamento": [],
-  finalizado: [],
+  "Pendente": [],
+  "Em Andamento": [],
+  "Finalizado": [],
 };
 
 export default function Kanban() {
@@ -51,9 +51,9 @@ export default function Kanban() {
 
   useEffect(() => {
     setColumns((prev) => ({
-      pendente: pending ?? prev.pendente,
-      "em andamento": progress ?? prev["em andamento"],
-      finalizado: done ?? prev.finalizado,
+      "Pendente": pending ?? prev.Pendente,
+      "Em Andamento": progress ?? prev["Em Andamento"],
+      "Finalizado": done ?? prev.Finalizado,
     }));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pending?.length, progress?.length, done?.length]);
