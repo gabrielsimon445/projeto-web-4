@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import ClientLayout from "./clientLayout";
+import { ThemeSwitcher } from "@/components/shared/ThemeSwitcher";
 
 export const metadata: Metadata = {
   title: "TaskFlow",
@@ -15,7 +16,7 @@ export default function RootLayout({
   return (
     <html>
       <body>
-        <ClientLayout>{children}</ClientLayout>
+          <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   );

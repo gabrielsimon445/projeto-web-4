@@ -9,35 +9,94 @@ import {
   Clock,
   Plus,
   Target,
-  TrendingUp,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
-import { TaskInfo } from "./components/TaskInfo";
+import React, { useEffect, useMemo, useState } from "react";
+import { useAllTasks } from "@/lib/actions/taskService";
 import TaskModal from "./components/TaskModal";
-import { useAllTasks, useUrgentsTasks } from "@/lib/actions/taskService";
+import { TaskInfo } from "./components/TaskInfo";
+
+// === NOVOS GRÁFICOS ===
+import { Card as TremorCard, Title } from "@tremor/react";
+
+import { isPast, startOfWeek, endOfWeek, isWithinInterval } from "date-fns";
+import StatusChart from "./components/Charts/StatusChart";
+import CategoryBarChart from "./components/Charts/CategoryChart";
 
 export default function DashboardPage() {
   const router = useRouter();
   const [showModal, setShowModal] = useState(false);
   const [user, setUser] = useState<User | null>(auth.currentUser);
 
-  // 🔐 Verifica Login
+  // 🔐 Check login
   useEffect(() => {
     const unLogged = onAuthStateChanged(auth, (userLogged) => {
-      if (!userLogged) {
-        router.push("/login");
-      } else {
-        setUser(userLogged);
-      }
+      if (!userLogged) router.push("/login");
+      else setUser(userLogged);
     });
 
     return () => unLogged();
   }, [router]);
 
-  // 🔥 Busca tarefas no Firebase
-  const allTasks = useAllTasks(user?.uid || null);
-  const urgentTasks = useUrgentsTasks(user?.uid || null);
+  // 🔥 Fetch tasks from Firebase
+  const rawTasks = useAllTasks(user?.uid || null);
+
+  const allTasks = useMemo(() => {
+    return rawTasks ?? [];
+  }, [rawTasks]);
+
+  // ================================================
+  // 📌 Métricas do Dashboard
+  // ================================================
+  const pendingCount = allTasks.filter((t) => t.status === "pendente").length;
+
+  const overdueCount = allTasks.filter(
+    (t) =>
+      t.due_date && isPast(new Date(t.due_date)) && t.status !== "finalizado"
+  ).length;
+
+  const completedThisWeek = allTasks.filter((t) => {
+    if (!t.due_date || t.status !== "finalizado") return false;
+
+    const date = new Date(t.due_date);
+    return isWithinInterval(date, {
+      start: startOfWeek(new Date()),
+      end: endOfWeek(new Date()),
+    });
+  }).length;
+
+  // ================================================
+  // 📊 Dados dos Gráficos Recharts
+  // ================================================
+  const statusChartData = useMemo(() => {
+    const pending = allTasks.filter((t) => t.status === "pendente").length;
+    const inProgress = allTasks.filter(
+      (t) => t.status === "em andamento"
+    ).length;
+    const finished = allTasks.filter((t) => t.status === "finalizado").length;
+
+    return [
+      { name: "Pendente", value: pending },
+      { name: "Em Andamento", value: inProgress },
+      { name: "Finalizado", value: finished },
+    ];
+  }, [allTasks]);
+
+  const categoryChartData = useMemo(() => {
+    const grouped: Record<string, number> = {};
+
+    allTasks.forEach((task) => {
+      const cat = task.category || "Sem categoria";
+      grouped[cat] = (grouped[cat] || 0) + 1;
+    });
+
+    return Object.entries(grouped).map(([key, value]) => ({
+      category: key,
+      tasks: value,
+    }));
+  }, [allTasks]);
+
+  // ================================================
 
   return (
     <>
@@ -49,9 +108,7 @@ export default function DashboardPage() {
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
                 Dashboard
               </h1>
-              <p className="text-gray-600">
-                Welcome back! Here&apos;s your productivity overview
-              </p>
+              <p className="text-gray-600">Here’s your productivity overview</p>
             </div>
 
             <div
@@ -63,63 +120,61 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Cards resumo */}
+          {/* === MÉTRICAS === */}
           <section className="grid gap-6 md:grid-cols-4 mb-8">
             <Card
-              title="Total Tasks"
+              title="Tarefas Pendentes"
               variant="compact"
-              value={allTasks?.length || 0}
-              subtitle="All time"
-              icon={Target}
-              gradient="from-indigo-400 to-indigo-600"
-            />
-            <Card
-              title="In Progress"
-              variant="compact"
-              value={allTasks?.filter(t => t.status === "in_progress").length || 0}
-              subtitle="Active now"
+              value={pendingCount}
+              subtitle="Aguardando ação"
               icon={Clock}
               gradient="from-blue-400 to-blue-600"
             />
+
             <Card
-              title="Completed"
+              title="Concluídas na Semana"
               variant="compact"
-              value={allTasks?.filter(t => t.status === "completed").length || 0}
-              subtitle="completion rate"
+              value={completedThisWeek}
+              subtitle="Últimos 7 dias"
               icon={CheckCircle2}
               gradient="from-green-400 to-green-600"
             />
+
             <Card
-              title="Urgent Tasks"
+              title="Tarefas Vencidas"
               variant="compact"
-              value={urgentTasks?.length || 0}
-              subtitle="High priority"
+              value={overdueCount}
+              subtitle="Prazo excedido"
               icon={CircleAlertIcon}
               gradient="from-red-400 to-red-600"
             />
+
+            <Card
+              title="Total de Tarefas"
+              variant="compact"
+              value={allTasks.length}
+              subtitle="Cadastradas"
+              icon={Target}
+              gradient="from-indigo-400 to-indigo-600"
+            />
           </section>
 
-          {/* Gráficos */}
-          <section className="flex gap-6 mb-8">
-            <Card variant="default" classname="mb-10 w-full">
-              <div>
-                <h2 className="text-xl font-semibold mb-4">Tarefas por Status</h2>
-                <div>{/* gráfico aqui */}</div>
-              </div>
-            </Card>
+          {/* === GRÁFICOS === */}
+          <section className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <TremorCard>
+              <Title>Tarefas por Status</Title>
+              <StatusChart data={statusChartData} />
+            </TremorCard>
 
-            <Card variant="default" classname="mb-10 w-full">
-              <div>
-                <h2 className="text-xl font-semibold mb-4">Tarefas por Categoria</h2>
-                <div>{/* gráfico aqui */}</div>
-              </div>
-            </Card>
+            <TremorCard>
+              <Title>Tarefas por Categoria</Title>
+              <CategoryBarChart data={categoryChartData} />
+            </TremorCard>
           </section>
 
-          {/* Listas de tarefas */}
-          <section className="flex gap-6">
-            {/* Recentes */}
-            <Card variant="default" classname="mb-10 w-full">
+          {/* === LISTAS === */}
+          <section className="flex gap-6 flex-col lg:flex-row">
+            <Card variant="default" classname="w-full">
               <span className="flex gap-2 text-xl font-bold items-center mb-6">
                 <Clock className="text-indigo-600" />
                 Tarefas Recentes
@@ -132,17 +187,18 @@ export default function DashboardPage() {
               </div>
             </Card>
 
-            {/* Urgentes */}
-            <Card variant="default" classname="mb-10 w-full">
+            <Card variant="default" classname="w-full">
               <span className="flex gap-2 text-xl font-bold items-center mb-6">
                 <CircleAlertIcon className="text-orange-600" />
                 Tarefas Urgentes
               </span>
 
               <div className="flex flex-col gap-2">
-                {urgentTasks?.map((task) => (
-                  <TaskInfo key={task.id} items={task} />
-                ))}
+                {allTasks
+                  .filter((t) => t.category === "urgente")
+                  .map((task) => (
+                    <TaskInfo key={task.id} items={task} />
+                  ))}
               </div>
             </Card>
           </section>

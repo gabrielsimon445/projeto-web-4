@@ -115,7 +115,9 @@ export const updateTask = async (
   const progress = calculateProgress(task.subtasks);
 
   // NUNCA envia `id` para o Firestore
-  const payload = { ...task, id: undefined, progress };
+  const { id, ...taskWithoutId } = task;
+
+  const payload = { ...taskWithoutId, progress };
 
   return await updateDoc(taskRef, payload);
 };
