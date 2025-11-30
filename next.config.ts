@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
       {source: '/signup', destination:'/auth/signup'},
       {source: '/dashboard', destination:'/dashboard'},
       {source: '/kanban', destination:'/kanban'},
+      {source: '/calendar', destination:'/calendar'},
     ]
   },
   images: {

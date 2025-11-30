@@ -1,30 +1,14 @@
 "use client";
 
-import { cotacao, getCripto, getDolar } from "@/app/api";
-import { PizzaGraph } from "@/components/features/dashboard/PizzaGraph";
-import { Card } from "@/components/shared/card";
-import { auth, db } from "@/lib/firebase/firebaseconfig";
+import { auth } from "@/lib/firebase/firebaseconfig";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
-import {
-  CheckCircle2,
-  CircleAlertIcon,
-  Clock,
-  Plus,
-  Search,
-  Target,
-  TrendingUp,
-} from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { TaskInfo } from "../dashboard/components/TaskInfo";
 import TaskModal from "../dashboard/components/TaskModal";
-
-import {
-  DragDropContext,
-  Droppable,
-  Draggable,
-} from "@hello-pangea/dnd";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import { useDoneTasks, usePendingTasks, useProgressTasks } from "@/lib/actions/taskService";
 
 interface TaskData {
   id: string;
@@ -37,58 +21,30 @@ interface TaskData {
   estado: string;
 }
 
-export default function DashboardPage() {
+export default function KanbanPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(auth.currentUser);
 
   // 🔥 TASKS LOCAIS DO KANBAN
-    const [columns, setColumns] = useState<Record<string, { name: string; items: TaskData[] }>>({
-      pendente: {
-        name: "Pendente",
-        items: [
-          {
-            id: "1",
-            titulo: "Dois",
-            descricao: "Teste",
-            prioridade: "Baixa",
-            categoria: "Pessoal",
-            data: "24 Nov",
-            responsavel: "Douglas",
-            estado: "Pendente",
-          },
-        ] as TaskData[],
-      },
-      andamento: {
-        name: "Em Andamento",
-        items: [
-          {
-            id: "2",
-            titulo: "Teste",
-            descricao: "Teste",
-            prioridade: "Média",
-            categoria: "Pessoal",
-            data: "24 Nov",
-            responsavel: "Douglas",
-            estado: "Em Andamento",
-          },
-        ] as TaskData[],
-      },
-      finalizado: {
-        name: "Finalizado",
-        items: [
-          {
-            id: "3",
-            titulo: "Teste",
-            descricao: "Teste",
-            prioridade: "Alta",
-            categoria: "Equipe",
-            data: "24 Nov",
-            responsavel: "Douglas",
-            estado: "Finalizado",
-          },
-        ] as TaskData[],
-      },
-    });
+  const [columns, setColumns] = useState<
+    Record<string, { name: string; color: string; items: FormData[] }>
+  >({
+    pendente: {
+      name: "Pendente",
+      color: "bg-gradient-to-r from-green-400 to-green-600",
+      items: usePendingTasks(user?.uid || null) as FormData[],
+    },
+    andamento: {
+      name: "Em Andamento",
+      color: "bg-gradient-to-r from-indigo-400 to-indigo-600",
+      items: useProgressTasks(user?.uid || null) as FormData[],
+    },
+    finalizado: {
+      name: "Finalizado",
+      color: "bg-gradient-to-r from-green-400 to-green-600",
+      items: useDoneTasks(user?.uid || null) as FormData[],
+    },
+  });
 
   // 🔥 FUNÇÃO PRINCIPAL DO DRAG & DROP
   const onDragEnd = (result: any) => {
@@ -123,7 +79,7 @@ export default function DashboardPage() {
     const destItems = [...destColumn.items];
 
     const [removed] = sourceItems.splice(source.index, 1);
-    removed.estado = destColumn.name; // Atualiza o estado visualmente
+    removed.status = destColumn.name; // Atualiza o estado visualmente
 
     destItems.splice(destination.index, 0, removed);
 
@@ -141,19 +97,6 @@ export default function DashboardPage() {
   const [selectTask, setSelectedTask] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [balance, setBalance] = useState(0);
-  const [income, setIncome] = useState(0);
-  const [expense, setExpense] = useState(0);
-  const [bills, setBills] = useState([]);
-  const [despesasCategoria, setDespesasCategoria] = useState([
-    { categoria: "Alimentação", valor: 0 },
-    { categoria: "Transporte", valor: 0 },
-    { categoria: "Moradia", valor: 0 },
-    { categoria: "Lazer", valor: 0 },
-    { categoria: "Educação", valor: 0 },
-    { categoria: "Saúde", valor: 0 },
-    { categoria: "Outros", valor: 0 },
-  ]);
 
   useEffect(() => {
     const unLogged = onAuthStateChanged(auth, (userLogged) => {
@@ -165,18 +108,12 @@ export default function DashboardPage() {
     });
   });
 
-  // (Seus outros hooks e funções foram omitidos aqui para encurtar,
-  // mas podem permanecer EXACTAMENTE como estão no seu projeto.)
-
-  // ==========================================================
-  // RENDERIZAÇÃO COMPLETA — COM DRAG & DROP
-  // ==========================================================
+  console.log("Colunas do Kanban:", columns);
 
   return (
     <>
       <div className="min-h-screen bg-[#FAFAF9] p-6">
         <div className="max-w-7xl mx-auto">
-
           {/* Header */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
             <div>
@@ -211,15 +148,17 @@ export default function DashboardPage() {
           {/* 🟦 GRID DO KANBAN COM DRAG & DROP */}
           <DragDropContext onDragEnd={onDragEnd}>
             <div className="grid md:grid-cols-3 gap-6 min-h-[500px]">
-
               {Object.entries(columns).map(([columnId, column]) => (
                 <div key={columnId} className="flex flex-col gap-4">
-
                   <div className="flex gap-3 items-center">
-                    <div className="px-3 py-1 text-sm rounded-lg bg-slate-700 text-white">
+                    <div
+                      className={`px-3 py-1 text-sm rounded-lg ${column.color} text-white`}
+                    >
                       {column.items.length}
                     </div>
-                    <h1 className="text-black font-semibold text-xl">{column.name}</h1>
+                    <h1 className="text-black font-semibold text-xl">
+                      {column.name}
+                    </h1>
                   </div>
 
                   <Droppable droppableId={columnId}>
@@ -227,7 +166,7 @@ export default function DashboardPage() {
                       <div
                         {...provided.droppableProps}
                         ref={provided.innerRef}
-                        className="bg-slate-700/10 rounded-xl w-full min-h-[300px] p-4 flex flex-col gap-4"
+                        className="bg-slate-400/10 rounded-xl w-full min-h-[300px] p-4 flex flex-col gap-4"
                       >
                         {column.items.map((item, index) => (
                           <Draggable
@@ -253,10 +192,8 @@ export default function DashboardPage() {
                   </Droppable>
                 </div>
               ))}
-
             </div>
           </DragDropContext>
-
         </div>
       </div>
 

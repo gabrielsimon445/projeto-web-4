@@ -1,32 +1,19 @@
 import { Card } from "@/components/shared/card";
 import { Calendar, User } from "lucide-react";
 import { useEffect, useState } from "react";
+import { FormData } from "../TaskModal";
 
 type TaskInfoProps = {
-  titulo: string;
-  descricao: string;
-  prioridade: string;
-  categoria: string;
-  data: string;
-  responsavel: string;
-  estado: string;
+  items: FormData;
 };
 
-export function TaskInfo({
-  titulo,
-  descricao,
-  prioridade,
-  categoria,
-  data,
-  responsavel,
-  estado,
-}: TaskInfoProps) {
+export function TaskInfo({ items }: TaskInfoProps) {
   const [dot, setDot] = useState("");
   const [badgeColor, setBadgeColor] = useState("");
   const [estadoColor, setEstadoColor] = useState("");
 
   useEffect(() => {
-    switch (prioridade) {
+    switch (items.priority) {
       case "Alta": {
         setDot("bg-red-500");
         break;
@@ -44,8 +31,8 @@ export function TaskInfo({
         break;
       }
     }
-    
-    switch (categoria) {
+
+    switch (items.category) {
       case "Pessoal": {
         setBadgeColor("bg-blue-100 border-blue-300 text-blue-800");
         break;
@@ -63,14 +50,14 @@ export function TaskInfo({
         break;
       }
     }
-    
-    switch (estado) {
+
+    switch (items.status) {
       case "Pendente": {
         setEstadoColor("bg-slate-100 border-slate-300 text-slate-800");
         break;
       }
       case "Em Andamento": {
-        setEstadoColor("bg-yellow-100 border-yellow-300 text-yellow-800");
+        setEstadoColor("bg-indigo-100 border-indigo-300 text-indigo-800");
         break;
       }
       case "Finalizado": {
@@ -82,7 +69,7 @@ export function TaskInfo({
         break;
       }
     }
-  }, [categoria, estado, prioridade]);
+  }, [items.category, items.priority, items.status]);
 
   return (
     <Card
@@ -93,28 +80,28 @@ export function TaskInfo({
         <header className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className={`w-2 h-2 rounded-full ${dot}`} />
-            <h1 className="font-semibold">{titulo}</h1>
+            <h1 className="font-semibold">{items.title}</h1>
           </div>
           <div
             className={`px-3 border rounded-lg shadow-md text-sm ${badgeColor}`}
           >
-            {categoria}
+            {items.category}
           </div>
         </header>
-        <span className="text-[14px] block truncate w-[95%]">{descricao}</span>
+        <span className="text-[14px] block truncate w-[95%]">{items.description}</span>
         <footer className="flex items-center justify-between">
           <div className="flex gap-3">
             <span className="flex items-center text-[12px]">
               <Calendar height={13} />
-              {data}
+              {items.due_date}
             </span>
             <span className="flex items-center text-[12px]">
               <User height={13} />
-              {responsavel}
+              {items.assignee}
             </span>
           </div>
           <div className={`px-3 border rounded-lg text-sm ${estadoColor}`}>
-            <span>{estado}</span>
+            <span>{items.status}</span>
           </div>
         </footer>
       </div>

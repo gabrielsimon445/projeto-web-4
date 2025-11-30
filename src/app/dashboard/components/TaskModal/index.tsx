@@ -1,16 +1,16 @@
-import React, { useState } from "react";
-import { CalendarIcon, Save, X } from "lucide-react";
-import Dialog from "@mui/material/Dialog";
-import DialogContent from "@mui/material/DialogContent";
+import React, { useEffect, useState } from "react";
+import { Save, X } from "lucide-react";
+import { createTask } from "@/lib/actions/taskService";
+import { auth } from "@/lib/firebase/firebaseconfig";
 
 type TaskModalProps = {
   isOpen?: boolean;
   onClose: (modal: boolean) => void;
-  onSave?: (data: FormData) => void;
   task?: FormData;
 };
 
-interface FormData {
+export interface FormData {
+  id: string;
   title: string;
   description: string;
   status: string;
@@ -20,27 +20,37 @@ interface FormData {
   assignee: string;
 }
 
-export default function TaskModal({
-  isOpen,
-  onClose,
-  onSave,
-  task,
-}: TaskModalProps) {
+export default function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
+  const user = auth.currentUser;
   const [formData, setFormData] = useState<FormData>({
+    id: "",
     title: "",
     description: "",
-    status: "",
+    status: "pendente",
     priority: "",
     category: "",
     due_date: "",
     assignee: "",
   });
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // onSave(formData);
+    if (!user) return;
+
+    if (task && (task as any).id) {
+      // await updateTask(user?.uid, (task as any).id, formData);
+    } else {
+      await createTask(user?.uid, formData);
+    }
+
     onClose(false);
   };
+
+  useEffect(() => {
+    if (task) {
+      setFormData(task);
+    }
+  }, [task]);
 
   return (
     <>
@@ -118,12 +128,19 @@ export default function TaskModal({
                   <label>Prazo</label>
                   <div>
                     <div>
-                      <button className="border border-slate-300 rounded-lg flex items-center gap-3 w-full px-3 py-1">
-                        <CalendarIcon className="h-3 w-3" />
-                        {formData.due_date
-                          ? new Date(formData.due_date).toDateString()
-                          : "Escolha uma data"}
-                      </button>
+                      <label className="border border-slate-300 rounded-lg flex items-center gap-3 w-full px-3 py-1 cursor-pointer">
+                        <input
+                          type="date"
+                          value={formData.due_date}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              due_date: e.target.value,
+                            })
+                          }
+                          className="bg-transparent w-full outline-none cursor-pointer"
+                        />
+                      </label>
                     </div>
                   </div>
                 </div>

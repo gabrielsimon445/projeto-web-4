@@ -20,6 +20,7 @@
     "@mui/x-charts": "^8.11.3",
     "aceternity-ui": "^0.2.2",
     "bcrypt": "^6.0.0",
+    "date-fns": "^4.1.0",
     "firebase": "^12.3.0",
     "framer-motion": "^12.23.24",
     "lucide-react": "^0.544.0",
