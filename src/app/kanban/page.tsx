@@ -1,203 +1,195 @@
 "use client";
 
-import { auth } from "@/lib/firebase/firebaseconfig";
-import { onAuthStateChanged, User } from "firebase/auth";
-import { Plus, Search } from "lucide-react";
-import { useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
-import { TaskInfo } from "../dashboard/components/TaskInfo";
+import { useState, useEffect } from "react";
+import {
+  DndContext,
+  closestCenter,
+  DragStartEvent,
+  DragOverEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import {
+  usePendingTasks,
+  useProgressTasks,
+  useDoneTasks,
+  updateTaskStatus,
+} from "@/lib/actions/taskService";
 import TaskModal from "../dashboard/components/TaskModal";
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { useDoneTasks, usePendingTasks, useProgressTasks } from "@/lib/actions/taskService";
+import { auth } from "@/lib/firebase/firebaseconfig";
+import { SortableItem } from "./sortable-item";
+import { Plus } from "lucide-react";
+import type { TaskData } from "@/lib/actions/taskService";
+import { DroppableColumn } from "./DroppableColumn";
 
-interface TaskData {
-  id: string;
-  titulo: string;
-  descricao: string;
-  prioridade: string;
-  categoria: string;
-  data: string;
-  responsavel: string;
-  estado: string;
-}
+type ColumnKey = "pendente" | "em andamento" | "finalizado";
 
-export default function KanbanPage() {
-  const router = useRouter();
-  const [user, setUser] = useState<User | null>(auth.currentUser);
+const emptyColumns: Record<ColumnKey, TaskData[]> = {
+  pendente: [],
+  "em andamento": [],
+  finalizado: [],
+};
 
-  // 🔥 TASKS LOCAIS DO KANBAN
-  const [columns, setColumns] = useState<
-    Record<string, { name: string; color: string; items: FormData[] }>
-  >({
-    pendente: {
-      name: "Pendente",
-      color: "bg-gradient-to-r from-green-400 to-green-600",
-      items: usePendingTasks(user?.uid || null) as FormData[],
-    },
-    andamento: {
-      name: "Em Andamento",
-      color: "bg-gradient-to-r from-indigo-400 to-indigo-600",
-      items: useProgressTasks(user?.uid || null) as FormData[],
-    },
-    finalizado: {
-      name: "Finalizado",
-      color: "bg-gradient-to-r from-green-400 to-green-600",
-      items: useDoneTasks(user?.uid || null) as FormData[],
-    },
-  });
+export default function Kanban() {
+  const user = auth.currentUser;
 
-  // 🔥 FUNÇÃO PRINCIPAL DO DRAG & DROP
-  const onDragEnd = (result: any) => {
-    if (!result.destination) return;
+  // Firebase collections
+  const pending = usePendingTasks(user?.uid || null) as TaskData[] | null;
+  const progress = useProgressTasks(user?.uid || null) as TaskData[] | null;
+  const done = useDoneTasks(user?.uid || null) as TaskData[] | null;
 
-    const { source, destination } = result;
+  // local board state
+  const [columns, setColumns] =
+    useState<Record<ColumnKey, TaskData[]>>(emptyColumns);
 
-    // Mesma coluna
-    if (source.droppableId === destination.droppableId) {
-      const column = columns[source.droppableId];
-      const copiedItems = [...column.items];
-
-      const [removed] = copiedItems.splice(source.index, 1);
-      copiedItems.splice(destination.index, 0, removed);
-
-      setColumns({
-        ...columns,
-        [source.droppableId]: {
-          ...column,
-          items: copiedItems,
-        },
-      });
-
-      return;
-    }
-
-    // Colunas diferentes
-    const sourceColumn = columns[source.droppableId];
-    const destColumn = columns[destination.droppableId];
-
-    const sourceItems = [...sourceColumn.items];
-    const destItems = [...destColumn.items];
-
-    const [removed] = sourceItems.splice(source.index, 1);
-    removed.status = destColumn.name; // Atualiza o estado visualmente
-
-    destItems.splice(destination.index, 0, removed);
-
-    setColumns({
-      ...columns,
-      [source.droppableId]: { ...sourceColumn, items: sourceItems },
-      [destination.droppableId]: { ...destColumn, items: destItems },
-    });
-  };
-
-  // ==========================================================
-  // (RESTO DO SEU CÓDIGO ORIGINAL — sem alterações)
-  // ==========================================================
-
-  const [selectTask, setSelectedTask] = useState(null);
+  // for modal
   const [showModal, setShowModal] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedTask, setSelectedTask] = useState<TaskData | null>(null);
+  const [createColumn, setCreateColumn] = useState<ColumnKey | null>(null);
 
   useEffect(() => {
-    const unLogged = onAuthStateChanged(auth, (userLogged) => {
-      if (!userLogged) {
-        router.push("/login");
-      } else {
-        setUser(userLogged);
-      }
-    });
-  });
+    setColumns((prev) => ({
+      pendente: pending ?? prev.pendente,
+      "em andamento": progress ?? prev["em andamento"],
+      finalizado: done ?? prev.finalizado,
+    }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pending?.length, progress?.length, done?.length]);
 
-  console.log("Colunas do Kanban:", columns);
+  // ============================
+  //  🔹 HANDLE DRAG START
+  // ============================
+  const handleDragStart = (event: DragStartEvent) => {
+    // Apenas para animações ou manipulação futura
+    document.body.style.cursor = "grabbing";
+  };
+
+  // ============================
+  //  🔹 HANDLE DRAG OVER (ANIMAÇÃO SUAVE ENTRE LISTAS)
+  // ============================
+  const handleDragOver = (event: DragOverEvent) => {
+    const { active, over } = event;
+    if (!over) return;
+  };
+
+  // ============================
+  //  🔹 HANDLE DRAG END + ROLLBACK
+  // ============================
+  const handleDragEnd = async (event: any) => {
+    document.body.style.cursor = "default";
+
+    const { active, over } = event;
+    if (!active || !over) return;
+
+    const activeData = active.data?.current;
+    const overData = over.data?.current;
+
+    if (!activeData || !overData) return;
+
+    const fromColumn = activeData.column as ColumnKey;
+    const toColumn = overData.column as ColumnKey;
+
+    if (fromColumn === toColumn) return;
+
+    const task: TaskData = activeData.task;
+
+    // backup para rollback
+    const previousState = structuredClone(columns);
+
+    try {
+      // Remove da origem
+      const updatedSource = columns[fromColumn].filter((t) => t.id !== task.id);
+
+      // Adiciona no destino
+      const updatedDestination = [
+        ...columns[toColumn],
+        { ...task, status: toColumn },
+      ];
+
+      // Atualiza local
+      setColumns((prev) => ({
+        ...prev,
+        [fromColumn]: updatedSource,
+        [toColumn]: updatedDestination,
+      }));
+
+      // Atualiza no firebase
+      if (task.id) {
+        await updateTaskStatus(user?.uid ?? "", task.id, toColumn);
+      }
+    } catch (err) {
+      console.error("Erro ao mover tarefa:", err);
+
+      // ROLLBACK
+      setColumns(previousState);
+    }
+  };
+
+  // ============================
+  //  🔹 HANDLE CREATE TASK
+  // ============================
+  const handleCreateTask = (column: ColumnKey) => {
+    setSelectedTask(null);
+    setCreateColumn(column);
+    setShowModal(true);
+  };
 
   return (
-    <>
-      <div className="min-h-screen bg-[#FAFAF9] p-6">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">Kanban</h1>
-              <p className="text-gray-600">Organize and track your workflow</p>
-            </div>
+    <div className="p-10 grid grid-cols-3 gap-6 bg-[#FAFAF9] min-h-screen">
+      <DndContext
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragOver={handleDragOver}
+      >
+        {(Object.keys(columns) as ColumnKey[]).map((key) => {
+          const items = columns[key] ?? [];
 
-            <div className="flex gap-3 w-full md:w-auto">
-              <div className="relative flex-1 md:w-64 border rounded-lg shadow-sm">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  placeholder="Search tasks..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9 w-full h-full text-gray-400 rounded-lg text-sm"
-                />
+          return (
+            <div key={key} className="bg-white rounded-xl border p-4 shadow-md">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="font-bold text-lg capitalize">{key}</h2>
+
+                {/* + Criar tarefa na coluna */}
+                <button
+                  onClick={() => handleCreateTask(key)}
+                  className="p-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  <Plus size={16} />
+                </button>
               </div>
-
-              <div
-                onClick={() => {
-                  setSelectedTask(null);
-                  setShowModal(true);
-                }}
-                className="bg-indigo-600 hover:bg-indigo-700 cursor-pointer flex items-center gap-1 py-2 px-4 rounded-lg shadow-lg shadow-indigo-500/30"
-              >
-                <Plus className="w-5 h-5 mr-2" />
-                Create Task
-              </div>
+              <DroppableColumn id={key}>
+                <SortableContext
+                  items={items.map((t, i) => t.id ?? `temp-${i}`)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {items.map((task, index) => (
+                    <SortableItem
+                      key={task.id ?? `temp-${index}`}
+                      id={task.id ?? `temp-${index}`}
+                      task={task}
+                      column={key}
+                      onClick={() => {
+                        setSelectedTask(task);
+                        setShowModal(true);
+                      }}
+                    />
+                  ))}
+                </SortableContext>
+              </DroppableColumn>
             </div>
-          </div>
+          );
+        })}
+      </DndContext>
 
-          {/* 🟦 GRID DO KANBAN COM DRAG & DROP */}
-          <DragDropContext onDragEnd={onDragEnd}>
-            <div className="grid md:grid-cols-3 gap-6 min-h-[500px]">
-              {Object.entries(columns).map(([columnId, column]) => (
-                <div key={columnId} className="flex flex-col gap-4">
-                  <div className="flex gap-3 items-center">
-                    <div
-                      className={`px-3 py-1 text-sm rounded-lg ${column.color} text-white`}
-                    >
-                      {column.items.length}
-                    </div>
-                    <h1 className="text-black font-semibold text-xl">
-                      {column.name}
-                    </h1>
-                  </div>
-
-                  <Droppable droppableId={columnId}>
-                    {(provided) => (
-                      <div
-                        {...provided.droppableProps}
-                        ref={provided.innerRef}
-                        className="bg-slate-400/10 rounded-xl w-full min-h-[300px] p-4 flex flex-col gap-4"
-                      >
-                        {column.items.map((item, index) => (
-                          <Draggable
-                            key={item.id}
-                            draggableId={item.id}
-                            index={index}
-                          >
-                            {(provided) => (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                              >
-                                <TaskInfo {...item} />
-                              </div>
-                            )}
-                          </Draggable>
-                        ))}
-
-                        {provided.placeholder}
-                      </div>
-                    )}
-                  </Droppable>
-                </div>
-              ))}
-            </div>
-          </DragDropContext>
-        </div>
-      </div>
-
-      <TaskModal isOpen={showModal} onClose={(value) => setShowModal(value)} />
-    </>
+      {/* MODAL */}
+      <TaskModal
+        isOpen={showModal}
+        onClose={(v) => setShowModal(v)}
+        task={selectedTask?.id ? selectedTask : undefined}
+      />
+    </div>
   );
 }

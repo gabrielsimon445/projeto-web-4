@@ -19,10 +19,10 @@ import { useAllTasks, useUrgentsTasks } from "@/lib/actions/taskService";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [selectTask, setSelectedTask] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [user, setUser] = useState<User | null>(auth.currentUser);
 
+  // 🔐 Verifica Login
   useEffect(() => {
     const unLogged = onAuthStateChanged(auth, (userLogged) => {
       if (!userLogged) {
@@ -31,9 +31,12 @@ export default function DashboardPage() {
         setUser(userLogged);
       }
     });
+
+    return () => unLogged();
   }, [router]);
 
-  const Alltasks = useAllTasks(user?.uid || null);
+  // 🔥 Busca tarefas no Firebase
+  const allTasks = useAllTasks(user?.uid || null);
   const urgentTasks = useUrgentsTasks(user?.uid || null);
 
   return (
@@ -52,22 +55,20 @@ export default function DashboardPage() {
             </div>
 
             <div
-              onClick={() => {
-                setSelectedTask(null);
-                setShowModal(true);
-              }}
+              onClick={() => setShowModal(true)}
               className="bg-indigo-600 hover:bg-indigo-700 cursor-pointer flex items-center gap-1 py-2 px-4 rounded-lg shadow-lg shadow-indigo-500/30"
             >
               <Plus className="w-5 h-5 mr-2" />
               Create Task
             </div>
           </div>
-          {/* Balanço Geral */}
+
+          {/* Cards resumo */}
           <section className="grid gap-6 md:grid-cols-4 mb-8">
             <Card
               title="Total Tasks"
               variant="compact"
-              value={100}
+              value={allTasks?.length || 0}
               subtitle="All time"
               icon={Target}
               gradient="from-indigo-400 to-indigo-600"
@@ -75,7 +76,7 @@ export default function DashboardPage() {
             <Card
               title="In Progress"
               variant="compact"
-              value={20}
+              value={allTasks?.filter(t => t.status === "in_progress").length || 0}
               subtitle="Active now"
               icon={Clock}
               gradient="from-blue-400 to-blue-600"
@@ -83,85 +84,72 @@ export default function DashboardPage() {
             <Card
               title="Completed"
               variant="compact"
-              value={60}
-              subtitle={`completion rate`}
+              value={allTasks?.filter(t => t.status === "completed").length || 0}
+              subtitle="completion rate"
               icon={CheckCircle2}
               gradient="from-green-400 to-green-600"
             />
             <Card
-              title="Avg. Completion"
+              title="Urgent Tasks"
               variant="compact"
-              value={20}
-              subtitle="Days per task"
-              icon={TrendingUp}
-              gradient="from-purple-400 to-purple-600"
+              value={urgentTasks?.length || 0}
+              subtitle="High priority"
+              icon={CircleAlertIcon}
+              gradient="from-red-400 to-red-600"
             />
           </section>
-          {/* Gráficos */}|
+
+          {/* Gráficos */}
           <section className="flex gap-6 mb-8">
             <Card variant="default" classname="mb-10 w-full">
               <div>
-                <h2 className="text-xl font-semibold mb-4">
-                  Tarefas por Status
-                </h2>
-                <div>{/* <PizzaGraph data={despesasCategoria} /> */}</div>
+                <h2 className="text-xl font-semibold mb-4">Tarefas por Status</h2>
+                <div>{/* gráfico aqui */}</div>
               </div>
             </Card>
+
             <Card variant="default" classname="mb-10 w-full">
               <div>
-                <h2 className="text-xl font-semibold mb-4">
-                  Tarefas por Categoria
-                </h2>
-                <div>{/* <PizzaGraph data={despesasCategoria} /> */}</div>
+                <h2 className="text-xl font-semibold mb-4">Tarefas por Categoria</h2>
+                <div>{/* gráfico aqui */}</div>
               </div>
             </Card>
           </section>
-          {/*resumo task*/}
+
+          {/* Listas de tarefas */}
           <section className="flex gap-6">
+            {/* Recentes */}
             <Card variant="default" classname="mb-10 w-full">
               <span className="flex gap-2 text-xl font-bold items-center mb-6">
                 <Clock className="text-indigo-600" />
                 Tarefas Recentes
               </span>
+
               <div className="flex flex-col gap-2">
-                {Alltasks?.map((task, id) => (
-                  <TaskInfo
-                    key={id}
-                    titulo={task.title}
-                    descricao={task.description}
-                    prioridade={task.priority}
-                    categoria={task.category}
-                    data={task.dueDate}
-                    responsavel={task.assignee}
-                    estado={task.status}
-                  />
+                {allTasks?.map((task) => (
+                  <TaskInfo key={task.id} items={task} />
                 ))}
               </div>
             </Card>
+
+            {/* Urgentes */}
             <Card variant="default" classname="mb-10 w-full">
               <span className="flex gap-2 text-xl font-bold items-center mb-6">
                 <CircleAlertIcon className="text-orange-600" />
                 Tarefas Urgentes
               </span>
+
               <div className="flex flex-col gap-2">
-                {urgentTasks?.map((task, id) => (
-                  <TaskInfo
-                    key={id}
-                    titulo={task.title}
-                    descricao={task.description}
-                    prioridade={task.priority}
-                    categoria={task.category}
-                    data={task.dueDate}
-                    responsavel={task.assignee}
-                    estado={task.status}
-                  />
+                {urgentTasks?.map((task) => (
+                  <TaskInfo key={task.id} items={task} />
                 ))}
               </div>
             </Card>
           </section>
         </div>
       </div>
-      <TaskModal isOpen={showModal} onClose={(value) => setShowModal(value)} />
+
+      <TaskModal isOpen={showModal} onClose={setShowModal} />
     </>
   );
 }
