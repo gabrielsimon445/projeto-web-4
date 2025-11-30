@@ -217,7 +217,7 @@ export default function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
                   className="w-full border border-slate-300 rounded px-3 py-2"
                 >
                   <option value="Alta">Alta</option>
-                  <option value="Media">Média</option>
+                  <option value="Média">Média</option>
                   <option value="Baixa">Baixa</option>
                 </select>
               </div>

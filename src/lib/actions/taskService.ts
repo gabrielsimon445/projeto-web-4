@@ -29,7 +29,7 @@ export interface TaskData {
   title: string;
   description: string;
   due_date: string;
-  priority: "Baixa" | "Media" | "Alta";
+  priority: "Baixa" | "Média" | "Alta";
   status: string;
   category?: string;
   assignee?: string;

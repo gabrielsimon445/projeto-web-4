@@ -50,7 +50,7 @@ export function TaskInfo({ items, setTask, setModal }: TaskInfoProps) {
       case "Alta":
         setDot("red-500");
         break;
-      case "Media":
+      case "Média":
         setDot("yellow-500");
         break;
       case "Baixa":

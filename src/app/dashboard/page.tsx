@@ -189,7 +189,7 @@ export default function DashboardPage() {
 
             <div className="flex flex-col gap-2">
               {allTasks
-                .filter((t) => t.category === "urgente")
+                .filter((t) => t.category === "Urgente")
                 .map((task) => (
                   <TaskInfo
                     key={task.id}

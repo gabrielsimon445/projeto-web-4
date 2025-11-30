@@ -23,13 +23,15 @@ import { SortableItem } from "./sortable-item";
 import { Plus } from "lucide-react";
 import type { TaskData } from "@/lib/actions/taskService";
 import { DroppableColumn } from "./DroppableColumn";
+import { Card } from "@/components/shared/card";
+import { motion } from "framer-motion";
 
 type ColumnKey = "Pendente" | "Em Andamento" | "Finalizado";
 
 const emptyColumns: Record<ColumnKey, TaskData[]> = {
-  "Pendente": [],
+  Pendente: [],
   "Em Andamento": [],
-  "Finalizado": [],
+  Finalizado: [],
 };
 
 export default function Kanban() {
@@ -51,11 +53,11 @@ export default function Kanban() {
 
   useEffect(() => {
     setColumns((prev) => ({
-      "Pendente": pending ?? prev.Pendente,
+      Pendente: pending ?? prev.Pendente,
       "Em Andamento": progress ?? prev["Em Andamento"],
-      "Finalizado": done ?? prev.Finalizado,
+      Finalizado: done ?? prev.Finalizado,
     }));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pending?.length, progress?.length, done?.length]);
 
   // ============================
@@ -130,66 +132,77 @@ export default function Kanban() {
   // ============================
   //  🔹 HANDLE CREATE TASK
   // ============================
-  const handleCreateTask = (column: ColumnKey) => {
+  const handleCreateTask = () => {
     setSelectedTask(null);
-    setCreateColumn(column);
     setShowModal(true);
   };
 
   return (
-    <div className="p-10 grid grid-cols-3 gap-6 bg-[#FAFAF9] min-h-screen">
-      <DndContext
-        collisionDetection={closestCenter}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-        onDragOver={handleDragOver}
-      >
-        {(Object.keys(columns) as ColumnKey[]).map((key) => {
-          const items = columns[key] ?? [];
+    <div className="p-10 bg-[#FAFAF9] min-h-screen">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Kanban</h1>
+        </div>
+        <motion.div
+          whileHover={{ y: -4, scale: 1.02 }}
+          transition={{ duration: 0.2 }}
+        >
+          <div
+            onClick={() => handleCreateTask()}
+            className="bg-indigo-600 hover:bg-indigo-700 cursor-pointer flex items-center gap-1 py-2 px-4 rounded-lg shadow-lg shadow-indigo-500/30 text-white hover:shadow-xl"
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            Criar Tarefa
+          </div>
+        </motion.div>
+      </div>
 
-          return (
-            <div key={key} className="bg-white rounded-xl border p-4 shadow-md">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="font-bold text-lg capitalize">{key}</h2>
+      <div className="grid grid-cols-3 gap-6 bg-[#FAFAF9] min-h-full">
+        <DndContext
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+          onDragOver={handleDragOver}
+        >
+          {(Object.keys(columns) as ColumnKey[]).map((key) => {
+            const items = columns[key] ?? [];
 
-                {/* + Criar tarefa na coluna */}
-                <button
-                  onClick={() => handleCreateTask(key)}
-                  className="p-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  <Plus size={16} />
-                </button>
-              </div>
-              <DroppableColumn id={key}>
-                <SortableContext
-                  items={items.map((t, i) => t.id ?? `temp-${i}`)}
-                  strategy={verticalListSortingStrategy}
-                >
-                  {items.map((task, index) => (
-                    <SortableItem
-                      key={task.id ?? `temp-${index}`}
-                      id={task.id ?? `temp-${index}`}
-                      task={task}
-                      column={key}
-                      onClick={() => {
-                        setSelectedTask(task);
-                        setShowModal(true);
-                      }}
-                    />
-                  ))}
-                </SortableContext>
-              </DroppableColumn>
-            </div>
-          );
-        })}
-      </DndContext>
+            return (
+              <Card key={key} variant="default">
+                <div className="mb-4 flex items-center justify-between">
+                  <h2 className="font-semibold text-lg capitalize">{key}</h2>
+                </div>
+                <DroppableColumn id={key}>
+                  <SortableContext
+                    items={items.map((t, i) => t.id ?? `temp-${i}`)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {items.map((task, index) => (
+                      <SortableItem
+                        key={task.id ?? `temp-${index}`}
+                        id={task.id ?? `temp-${index}`}
+                        task={task}
+                        column={key}
+                        onClick={() => {
+                          setSelectedTask(task);
+                          setShowModal(true);
+                        }}
+                      />
+                    ))}
+                  </SortableContext>
+                </DroppableColumn>
+              </Card>
+            );
+          })}
+        </DndContext>
 
-      {/* MODAL */}
-      <TaskModal
-        isOpen={showModal}
-        onClose={(v) => setShowModal(v)}
-        task={selectedTask?.id ? selectedTask : undefined}
-      />
+        {/* MODAL */}
+        <TaskModal
+          isOpen={showModal}
+          onClose={() => setShowModal(false)}
+          task={selectedTask?.id ? selectedTask : undefined}
+        />
+      </div>
     </div>
   );
 }
