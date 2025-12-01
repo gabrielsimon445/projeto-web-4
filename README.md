@@ -1,5 +1,5 @@
 
-% TaskFlow — Guia para clonar, instalar e rodar localmente
+# TaskFlow — Guia para clonar, instalar e rodar localmente
 
 Projeto baseado em Next.js com autenticação e persistência via Firebase (Auth + Firestore).
 
