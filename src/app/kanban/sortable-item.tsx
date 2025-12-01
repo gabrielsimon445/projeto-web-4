@@ -33,7 +33,7 @@ export function SortableItem({ id, task, column, onClick }: SortableItemProps) {
   useEffect(() => {
     switch (task?.status) {
       case "Pendente":
-        setStateColor("indigo-300");
+        setStateColor("blue-300");
         break;
       case "Em Andamento":
         setStateColor("yellow-300");
@@ -42,7 +42,7 @@ export function SortableItem({ id, task, column, onClick }: SortableItemProps) {
         setStateColor("green-300");
         break;
       default:
-        setStateColor("slate-300");
+        setStateColor("blue-300");
     }
   }, [task?.status]);
 

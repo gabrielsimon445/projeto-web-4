@@ -12,7 +12,7 @@ const navigationItems = [
     icon: LayoutDashboard,
   },
   {
-    title: "Calendar",
+    title: "Calendário",
     url: "/calendar",
     icon: Calendar,
   },
@@ -37,7 +37,7 @@ export default function ClientLayout({
           <div className="border-r border-gray-200 bg-white w-48 block h-screen sticky top-0">
             <div className="border-b border-gray-200 px-6 py-5">
               <Link className="flex items-center gap-2.5" href="/dashboard">
-                <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-sm">
+                <div className="w-9 h-9 bg-linear-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-sm">
                   <CheckSquare className="w-5 h-5 text-white" />
                 </div>
                 <div>

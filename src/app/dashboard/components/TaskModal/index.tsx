@@ -177,7 +177,7 @@ export default function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
               <label className="block text-sm font-medium mb-1">Título *</label>
               <input
                 type="text"
-                value={formData.title}
+                value={formData.title || ""}
                 placeholder="Digite aqui..."
                 required
                 onChange={(e) =>

@@ -104,7 +104,7 @@ export default function LandingPage() {
 
               <h1 className="text-5xl md:text-4xl flex flex-col lg:text-6xl font-bold text-gray-900 leading-tight mb-6">
                 <span>Gerenciar tarefas</span>
-                <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                <span className="bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                   Sem esforço
                 </span>
               </h1>
@@ -144,7 +144,7 @@ export default function LandingPage() {
               style={{ transform: `translateY(${scrollY * 0.1}px)` }}
               className="relative"
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-3xl blur-3xl" />
+              <div className="absolute inset-0 bg-linear-to-br from-indigo-500/20 to-purple-500/20 rounded-3xl blur-3xl" />
               <Image
                 src="/hero-dashboard.jpeg"
                 alt="Dashboard preview"
@@ -188,7 +188,7 @@ export default function LandingPage() {
                 <div className="h-full border-0 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 bg-white">
                   <CardContent className="p-8">
                     <div
-                      className={`w-14 h-14 bg-gradient-to-br ${feature.color} rounded-2xl flex items-center justify-center mb-6 shadow-lg`}
+                      className={`w-14 h-14 bg-linear-to-br ${feature.color} rounded-2xl flex items-center justify-center mb-6 shadow-lg`}
                     >
                       <feature.icon
                         className="w-7 h-7 text-white"
@@ -212,7 +212,7 @@ export default function LandingPage() {
           </div>
 
           <div className="grid md:grid-cols-2 gap-8 mt-12">
-            <div className="border-0 shadow-lg rounded-2xl bg-gradient-to-br from-indigo-50 to-purple-50">
+            <div className="border-0 shadow-lg rounded-2xl bg-linear-to-br from-indigo-50 to-purple-50">
               <CardContent className="p-8">
                 <Users className="w-12 h-12 text-indigo-600 mb-4" />
                 <h3 className="text-2xl font-bold text-gray-900 mb-3">
@@ -224,7 +224,7 @@ export default function LandingPage() {
                 </p>
               </CardContent>
             </div>
-            <div className="border-0 shadow-lg rounded-2xl bg-gradient-to-br from-purple-50 to-pink-50">
+            <div className="border-0 shadow-lg rounded-2xl bg-linear-to-br from-purple-50 to-pink-50">
               <CardContent className="p-8">
                 <BarChart3 className="w-12 h-12 text-purple-600 mb-4" />
                 <h3 className="text-2xl font-bold text-gray-900 mb-3">
@@ -304,7 +304,7 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-3xl p-12 md:p-16 text-center shadow-2xl relative overflow-hidden"
+            className="bg-linear-to-br from-indigo-600 to-purple-600 rounded-3xl p-12 md:p-16 text-center shadow-2xl relative overflow-hidden"
           >
             <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48cGF0aCBkPSJNMzYgMzBoLTZWMThoNnYxMnoiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-30" />
             <div className="relative z-10">
@@ -334,7 +334,7 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-4 gap-8 mb-8">
             <div>
               <div className="flex items-center gap-2.5 mb-4">
-                <div className="w-9 h-9 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                <div className="w-9 h-9 bg-linear-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center">
                   <CheckSquare className="w-5 h-5 text-white" />
                 </div>
                 <span className="font-bold text-xl text-gray-900">
