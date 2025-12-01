@@ -5,7 +5,6 @@ Projeto baseado em Next.js com autenticação e persistência via Firebase (Auth
 
 Links importantes
 - Vercel: https://task-flow-douglas.vercel.app/
-- GitHub: https://github.com/gabrielsimon445/projeto-web-4
 
 Pré-requisitos
 - Node.js (recomendo v18+). Verifique com `node -v`.
@@ -83,7 +82,3 @@ Dicas e resolução de problemas
 - Erro relacionado a variáveis de ambiente: verifique se `.env.local` está na raiz e reinicie o servidor.
 - Erros do Firebase (autenticação/regras): verifique as regras do Firestore e se o projeto correto está sendo usado.
 - Dependências incompatíveis: delete `node_modules` e `package-lock.json` e rode `npm install` novamente.
-
-Contato
-- Repositório: https://github.com/gabrielsimon445/projeto-web-4
-- Deploy (Vercel): https://task-flow-douglas.vercel.app/
